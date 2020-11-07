@@ -1,4 +1,5 @@
 import isEditable from 'dom-element-is-natively-editable';
+import {VALUE_CONTROL, CODE_CONTROL_LEFT, VALUE_0, VALUE_V, CODE_V} from 'keycode-js';
 
 const CTRL = 1 << 0;
 const META = 1 << 1;
@@ -23,13 +24,15 @@ export class Keystroke {
    * @param {number} modifiers A bitmask formed by CTRL, META, ALT, and SHIFT.
    * @param {number} keyCode
    */
-  constructor(modifiers, keyCode) {
+  constructor(modifiers, keyCode, key, code) {
     this.modifiers = modifiers;
     this.ctrlKey = !!(modifiers & CTRL);
     this.metaKey = !!(modifiers & META);
     this.altKey = !!(modifiers & ALT);
     this.shiftKey = !!(modifiers & SHIFT);
     this.keyCode = keyCode;
+    this.key = key || '';
+    this.code = code || '';
   }
 
   /**
@@ -143,6 +146,8 @@ export class Keyboard {
             : keystroke.keyCode;
         event.charCode = type === 'keypress' ? event.keyCode : 0;
         event.which = event.keyCode;
+        event.key = keystroke.key;
+        event.code = keystroke.code;
         break;
     }
 
@@ -336,7 +341,7 @@ export class Keyboard {
       target.dispatchEvent(
         this.createEventFromKeystroke(
           'keyup',
-          new Keystroke(currentModifierState, this._actionKeyCodeMap.CTRL),
+          new Keystroke(currentModifierState, this._actionKeyCodeMap.CTRL, VALUE_CONTROL, CODE_CONTROL_LEFT),
           target
         )
       );
@@ -384,7 +389,7 @@ export class Keyboard {
       target.dispatchEvent(
         this.createEventFromKeystroke(
           'keydown',
-          new Keystroke(currentModifierState, this._actionKeyCodeMap.CTRL),
+          new Keystroke(currentModifierState, this._actionKeyCodeMap.CTRL, VALUE_CONTROL, CODE_CONTROL_LEFT),
           target
         )
       );
@@ -417,7 +422,7 @@ export class Keyboard {
     if (currentModifierState !== toModifierState) {
       throw new Error(
         `internal error, expected modifier state: ${toModifierState}` +
-          `, got: ${currentModifierState}`
+        `, got: ${currentModifierState}`
       );
     }
   }
@@ -429,7 +434,7 @@ export class Keyboard {
    * @return {?Keystroke}
    */
   keystrokeForAction(action) {
-    let keyCode = null;
+    let keyCode = null, code = null, key = null;
     let modifiers = 0;
 
     let parts = action.split('+');
@@ -460,11 +465,13 @@ export class Keyboard {
       let lastPartKeystroke = this.keystrokeForCharCode(lastPart.charCodeAt(0));
       modifiers |= lastPartKeystroke.modifiers;
       keyCode = lastPartKeystroke.keyCode;
+      key = lastPartKeystroke.key;
+      code = lastPartKeystroke.code;
     } else {
       throw new Error(`in "${action}", invalid action: ${lastPart}`);
     }
 
-    return new Keystroke(modifiers, keyCode);
+    return new Keystroke(modifiers, keyCode, key, code);
   }
 
   /**
@@ -577,7 +584,7 @@ const US_ENGLISH_CHARCODE_KEYCODE_MAP = {
   115: new Keystroke(0, 83), // s
   116: new Keystroke(0, 84), // t
   117: new Keystroke(0, 85), // u
-  118: new Keystroke(0, 86), // v
+  118: new Keystroke(0, 86, VALUE_V, CODE_V), // v
   119: new Keystroke(0, 87), // w
   120: new Keystroke(0, 88), // x
   121: new Keystroke(0, 89), // y

@@ -57,5 +57,8 @@
     "rollup-plugin-babel": "^3.0.4",
     "rollup-plugin-node-resolve": "^3.3.0",
     "watchify": "^3.11.1"
+  },
+  "dependencies": {
+    "keycode-js": "^3.1.0"
   }
 }
